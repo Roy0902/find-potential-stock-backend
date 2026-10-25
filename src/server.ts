@@ -1,7 +1,12 @@
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
 import { PostgresCommentRepository } from './repository/commentRepository.js';
+import { IngestRepository } from './repository/ingestRepository.js';
+import { ScrapeRepository } from './repository/scrapeRepository.js';
 import { createDatabase } from './db.js';
+import { ErrorNotifier } from './scraper/notifier.js';
+import { ScrapeRunner } from './scraper/runner.js';
+import { ScrapeScheduler } from './scraper/scheduler.js';
 
 async function main() {
   const config = loadConfig();
@@ -15,8 +20,22 @@ async function main() {
     );
   }
 
+  const runner = new ScrapeRunner({
+    config,
+    runs: new ScrapeRepository(db),
+    ingest: new IngestRepository(db),
+    notifier: new ErrorNotifier(config.smtp),
+  });
+  const scheduler = new ScrapeScheduler(runner, config, {
+    info: (message) => app.log.info(message),
+    warn: (message) => app.log.warn(message),
+    error: (message) => app.log.error(message),
+  });
+  scheduler.start();
+
   const shutdown = async (signal: string) => {
     app.log.info(`received ${signal}, shutting down`);
+    await scheduler.stop();
     await app.close();
     await db.end();
     process.exit(0);

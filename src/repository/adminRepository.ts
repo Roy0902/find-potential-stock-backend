@@ -192,9 +192,13 @@ export class AdminRepository {
       comments_added: number;
       comments_updated: number;
       comments_skipped_restricted: number;
+      log_file: string | null;
+      error_count: number;
+      stop_reason: string | null;
     }>(
       `SELECT id, mode, status, started_at, finished_at,
-              comments_added, comments_updated, comments_skipped_restricted
+              comments_added, comments_updated, comments_skipped_restricted,
+              log_file, error_count, stop_reason
          FROM scrape_run
         ORDER BY started_at DESC, id DESC
         LIMIT $1`,
@@ -209,6 +213,9 @@ export class AdminRepository {
       commentsAdded: row.comments_added,
       commentsUpdated: row.comments_updated,
       commentsSkippedRestricted: row.comments_skipped_restricted,
+      logFile: row.log_file,
+      errorCount: row.error_count,
+      stopReason: row.stop_reason,
     }));
   }
 }

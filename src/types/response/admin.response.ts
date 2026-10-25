@@ -23,4 +23,7 @@ export type ScrapeRun = {
   commentsAdded: number;
   commentsUpdated: number;
   commentsSkippedRestricted: number;
+  logFile: string | null;
+  errorCount: number;
+  stopReason: string | null;
 };

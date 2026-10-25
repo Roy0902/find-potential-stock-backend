@@ -8,11 +8,15 @@ export type QueryResult<Row> = {
   rowCount: number | null;
 };
 
-export type Database = {
+export type Queryable = {
   query<Row = Record<string, unknown>>(
     text: string,
     values?: readonly unknown[],
   ): Promise<QueryResult<Row>>;
+};
+
+export type Database = Queryable & {
+  transaction: <T>(fn: (tx: Queryable) => Promise<T>) => Promise<T>;
   end: () => Promise<void>;
   isAvailable: () => Promise<boolean>;
 };
@@ -23,6 +27,7 @@ export function createDatabase(config: AppConfig): Database {
     max: 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
+    statement_timeout: 30_000,
   });
 
   // An idle-client error must not crash the API (scraper and API share the DB).
@@ -30,11 +35,38 @@ export function createDatabase(config: AppConfig): Database {
     console.error('database idle client error', error);
   });
 
+  const query = async <Row>(
+    text: string,
+    values?: readonly unknown[],
+  ): Promise<QueryResult<Row>> => {
+    const result = await pool.query(text, values as unknown[]);
+    return { rows: result.rows as Row[], rowCount: result.rowCount };
+  };
+
+  const transaction = async <T>(fn: (tx: Queryable) => Promise<T>): Promise<T> => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const tx: Queryable = {
+        query: async <Row>(text: string, values?: readonly unknown[]) => {
+          const result = await client.query(text, values as unknown[]);
+          return { rows: result.rows as Row[], rowCount: result.rowCount };
+        },
+      };
+      const result = await fn(tx);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
+  };
+
   return {
-    query: async <Row>(text: string, values?: readonly unknown[]) => {
-      const result = await pool.query(text, values as unknown[]);
-      return { rows: result.rows as Row[], rowCount: result.rowCount };
-    },
+    query,
+    transaction,
     end: () => pool.end(),
     isAvailable: async () => {
       try {

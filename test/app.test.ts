@@ -12,6 +12,9 @@ function fakeDb(available: boolean): Database {
     query: async () => {
       throw new Error('fake database: query not expected in these tests');
     },
+    transaction: async () => {
+      throw new Error('fake database: transaction not expected in these tests');
+    },
     end: async () => undefined,
     isAvailable: async () => available,
   };
