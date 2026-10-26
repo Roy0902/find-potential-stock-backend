@@ -138,7 +138,7 @@ Each run:
 | `SCRAPE_SOURCE` | `LIHKG` | `source.name` to scrape |
 | `SCRAPE_KEYWORDS` | `? | Comma-separated keywords; this iteration uses the first |
 | `SCRAPE_LIMIT` | `10` | Threads per run |
-| `SCRAPE_SORT` | `desc_create_time` | LIHKG search order |
+| `SCRAPE_SORT` | `desc_reply_time` | LIHKG search order; most recently replied threads first |
 | `SCRAPE_DELAY_MS` | `4000` | Pause between page requests |
 | `SCRAPE_TIMEOUT_MINUTES` | `180` | Hard limit for one run |
 | `SCRAPE_INCLUDE_OP` | `false` | Store floor 1 as a comment |

@@ -92,7 +92,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       source: env.SCRAPE_SOURCE ?? 'LIHKG',
       keywords: listFromEnv(env, 'SCRAPE_KEYWORDS', ['劇']),
       limit: intFromEnv(env, 'SCRAPE_LIMIT', 10),
-      sort: env.SCRAPE_SORT ?? 'desc_create_time',
+      sort: env.SCRAPE_SORT ?? 'desc_reply_time',
       delayMs: intFromEnv(env, 'SCRAPE_DELAY_MS', 4000),
       timeoutMinutes: intFromEnv(env, 'SCRAPE_TIMEOUT_MINUTES', 180),
       includeOp: boolFromEnv(env, 'SCRAPE_INCLUDE_OP', false),

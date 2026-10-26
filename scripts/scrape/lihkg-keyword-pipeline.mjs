@@ -1,7 +1,7 @@
 /**
  * LIHKG keyword pipeline.
  *
- * 1. Searches LIHKG for a keyword, newest threads first (`sort=desc_create_time`).
+ * 1. Searches LIHKG for a keyword, most recently replied threads first (`sort=desc_reply_time`).
  * 2. Takes the first N results (N = CONFIG.limit).
  * 3. Scrapes each thread's comments (all pages, raw API response shape).
  * 4. If a thread is archived (status 4) AND has >= 1000 replies, it is scraped,
@@ -31,8 +31,8 @@ import path from 'node:path';
 // ---------------------------------------------------------------------------
 const CONFIG = {
   keyword: '劇',
-  limit: 10, // first N threads to process, newest first
-  sort: 'desc_create_time', // 'desc_create_time' (newest posts) or 'desc_reply_time'
+  limit: 10, // first N threads to process, newest replies first
+  sort: 'desc_reply_time', // most recently replied threads first
   catId: null, // null = all categories
   includeOp: false, // include floor 1 in item_data
   delayMs: 4000, // pause between requests
