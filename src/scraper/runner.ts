@@ -577,7 +577,7 @@ export class ScrapeRunner {
       }
     }
 
-    if (seen === 0) {
+    if (seen === 0 && ingestedThreads > 0) {
       const message = 'all thread files contained 0 comments; possible layout change';
       errors.push(message);
       await writer.write('error', message);

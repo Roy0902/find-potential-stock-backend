@@ -196,7 +196,7 @@ describe('ScrapeRunner', () => {
     assert.match(result.reason ?? '', /still running/);
     assert.equal(runs.created.length, 0);
     assert.equal(ingest.calls.length, 0);
-    assert.match(await readFile(result.logFile!, 'utf8'), /skipping this run/);
+    assert.equal(result.logFile, null);
   });
 
   test('reports stale runs before starting', async () => {
