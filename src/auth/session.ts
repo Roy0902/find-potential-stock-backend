@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { Database } from '../db.js';
+import type { Database } from '../database/db.js';
 
 export const SESSION_COOKIE = 'fps_session';
 

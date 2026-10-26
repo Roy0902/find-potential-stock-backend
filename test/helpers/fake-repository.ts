@@ -1,8 +1,8 @@
 import type { ListCommentsQuery } from '../../src/types/request/comments.request.js';
 import type { CommentListResponse, CommentSummary } from '../../src/types/response/comments.response.js';
 import type { ForumListResponse } from '../../src/types/response/forums.response.js';
-import type { CommentRepository } from '../../src/repository/commentRepository.js';
-import { buildExcerpt } from '../../src/repository/commentRepository.js';
+import type { CommentRepository } from '../../src/repository/comment.repository.js';
+import { buildExcerpt } from '../../src/repository/comment.repository.js';
 
 type FakeComment = {
   id: number;

@@ -1,4 +1,4 @@
-import type { Database, Queryable } from '../db.js';
+import type { Database, Queryable } from '../database/db.js';
 import type {
   IngestThreadResult,
   LihkgThreadFile,

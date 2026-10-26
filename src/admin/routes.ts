@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import { HttpError } from '../http-error.js';
-import { success } from '../http-response.js';
-import type { AdminRepository } from '../repository/adminRepository.js';
+import { HttpError } from '../http/http-error.js';
+import { success } from '../http/http-response.js';
+import type { AdminRepository } from '../repository/admin.repository.js';
 import type {
   AdminCommentListQuery,
   AdminHiddenBody,

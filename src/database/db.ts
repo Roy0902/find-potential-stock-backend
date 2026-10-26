@@ -1,5 +1,5 @@
 import pg from 'pg';
-import type { AppConfig } from './config.js';
+import type { AppConfig } from '../config.js';
 
 const { Pool } = pg;
 

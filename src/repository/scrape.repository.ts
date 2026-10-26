@@ -1,4 +1,4 @@
-import type { Database } from '../db.js';
+import type { Database } from '../database/db.js';
 import type { ScrapeRunMode, ScrapeRunRow, ScrapeRunStatus } from '../types/data/scrape.data.js';
 
 export type FinishRunInput = {

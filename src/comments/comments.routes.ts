@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import type { CommentsRouteQuery } from '../types/request/comments.request.js';
 import type { CommentUnavailableResponse } from '../types/response/error.response.js';
-import type { CommentRepository } from '../repository/commentRepository.js';
-import { withLegacy } from '../http-response.js';
+import type { CommentRepository } from '../repository/comment.repository.js';
+import { withLegacy } from '../http/http-response.js';
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;

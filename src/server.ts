@@ -1,9 +1,9 @@
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
-import { PostgresCommentRepository } from './repository/commentRepository.js';
-import { IngestRepository } from './repository/ingestRepository.js';
-import { ScrapeRepository } from './repository/scrapeRepository.js';
-import { createDatabase } from './db.js';
+import { PostgresCommentRepository } from './repository/comment.repository.js';
+import { IngestRepository } from './repository/ingest.repository.js';
+import { ScrapeRepository } from './repository/scrape.repository.js';
+import { createDatabase } from './database/db.js';
 import { ErrorNotifier } from './scraper/notifier.js';
 import { ScrapeRunner } from './scraper/runner.js';
 import { ScrapeScheduler } from './scraper/scheduler.js';

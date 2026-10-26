@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import type { CommentRepository } from '../repository/commentRepository.js';
-import { withLegacy } from '../http-response.js';
+import type { CommentRepository } from '../repository/comment.repository.js';
+import { withLegacy } from '../http/http-response.js';
 
 export async function forumRoutes(
   app: FastifyInstance,

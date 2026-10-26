@@ -1,9 +1,9 @@
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadConfig } from '../../src/config.js';
-import { createDatabase, type Database } from '../../src/db.js';
-import { IngestRepository } from '../../src/repository/ingestRepository.js';
-import { ScrapeRepository } from '../../src/repository/scrapeRepository.js';
+import { createDatabase, type Database } from '../../src/database/db.js';
+import { IngestRepository } from '../../src/repository/ingest.repository.js';
+import { ScrapeRepository } from '../../src/repository/scrape.repository.js';
 import type { LihkgThreadFile, LihkgThreadItem } from '../../src/types/data/scrape.data.js';
 
 const SOURCE = 9951;

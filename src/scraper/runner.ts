@@ -3,8 +3,8 @@ import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AppConfig } from '../config.js';
-import type { IngestRepository } from '../repository/ingestRepository.js';
-import type { ScrapeRepository } from '../repository/scrapeRepository.js';
+import type { IngestRepository } from '../repository/ingest.repository.js';
+import type { ScrapeRepository } from '../repository/scrape.repository.js';
 import type {
   LihkgThreadFile,
   ScrapeRunMode,

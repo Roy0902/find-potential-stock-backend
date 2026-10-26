@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { loadConfig } from '../config.js';
-import { createDatabase } from '../db.js';
-import { IngestRepository } from '../repository/ingestRepository.js';
-import { ScrapeRepository } from '../repository/scrapeRepository.js';
+import { createDatabase } from '../database/db.js';
+import { IngestRepository } from '../repository/ingest.repository.js';
+import { ScrapeRepository } from '../repository/scrape.repository.js';
 import type { ScrapeRunMode } from '../types/data/scrape.data.js';
 import { ErrorNotifier } from './notifier.js';
 import { ScrapeRunner } from './runner.js';

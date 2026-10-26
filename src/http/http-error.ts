@@ -1,5 +1,5 @@
 import type { FastifyReply } from 'fastify';
-import type { ErrorResponse } from './types/response/error.response.js';
+import type { ErrorResponse } from '../types/response/error.response.js';
 
 export type { ErrorResponse };
 

@@ -4,7 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.js';
 import type { CommentSummary } from '../src/types/response/comments.response.js';
 import { loadConfig } from '../src/config.js';
-import type { Database } from '../src/db.js';
+import type { Database } from '../src/database/db.js';
 import { FakeCommentRepository, fakeComment } from './helpers/fake-repository.js';
 
 function fakeDb(available: boolean): Database {

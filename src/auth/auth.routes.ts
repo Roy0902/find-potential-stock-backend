@@ -1,12 +1,12 @@
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../config.js';
-import type { Database } from '../db.js';
-import { HttpError } from '../http-error.js';
+import type { Database } from '../database/db.js';
+import { HttpError } from '../http/http-error.js';
 import { hashPassword, verifyPassword } from './password.js';
 import { LoginRateLimiter } from './rate-limit.js';
 import { SESSION_COOKIE, readSessionCookie, type SessionStore } from './session.js';
 import type { LoginBody } from '../types/request/admin.request.js';
-import { success } from '../http-response.js';
+import { success } from '../http/http-response.js';
 
 // Compared against when the username does not exist, so both failure paths cost one scrypt run.
 const DUMMY_HASH = hashPassword('not-a-real-password');

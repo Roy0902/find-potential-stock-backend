@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../../src/app.js';
 import { loadConfig } from '../../src/config.js';
-import { PostgresCommentRepository } from '../../src/repository/commentRepository.js';
-import { createDatabase, type Database } from '../../src/db.js';
+import { PostgresCommentRepository } from '../../src/repository/comment.repository.js';
+import { createDatabase, type Database } from '../../src/database/db.js';
 
 const config = loadConfig();
 const db: Database = createDatabase(config);

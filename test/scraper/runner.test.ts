@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig } from '../../src/config.js';
 import { ErrorNotifier, type MailMessage } from '../../src/scraper/notifier.js';
 import { ScrapeRunner, type RunStore, type ThreadIngestor } from '../../src/scraper/runner.js';
-import type { FinishRunInput } from '../../src/repository/scrapeRepository.js';
+import type { FinishRunInput } from '../../src/repository/scrape.repository.js';
 import type { LihkgThreadFile } from '../../src/types/data/scrape.data.js';
 
 const FIXTURE = fileURLToPath(new URL('../fixtures/fake-scrape.mjs', import.meta.url));

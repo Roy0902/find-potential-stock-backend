@@ -1,5 +1,5 @@
-import type { Database } from '../db.js';
-import { buildExcerpt } from './commentRepository.js';
+import type { Database } from '../database/db.js';
+import { buildExcerpt } from './comment.repository.js';
 import type { AdminCommentRow } from '../types/data/admin.data.js';
 import type { AdminAction, AdminComment, ScrapeRun } from '../types/response/admin.response.js';
 

@@ -1,4 +1,4 @@
-import type { Database } from '../db.js';
+import type { Database } from '../database/db.js';
 import type { ListCommentsQuery } from '../types/request/comments.request.js';
 import type { CommentRow } from '../types/data/comment.data.js';
 import type { CommentListResponse, CommentSummary } from '../types/response/comments.response.js';

@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
-import type { ThreadRepository } from '../repository/threadRepository.js';
+import type { ThreadRepository } from '../repository/thread.repository.js';
 import type { ThreadRouteParams, ThreadRouteQuery } from '../types/request/threads.request.js';
-import { HttpError, sendError } from '../http-error.js';
-import { withLegacy } from '../http-response.js';
+import { HttpError, sendError } from '../http/http-error.js';
+import { withLegacy } from '../http/http-response.js';
 
 const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 100;

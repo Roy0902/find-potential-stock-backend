@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import type { Database } from '../db.js';
-import { success } from '../http-response.js';
+import type { Database } from '../database/db.js';
+import { success } from '../http/http-response.js';
 
 export async function healthRoutes(app: FastifyInstance, options: { db: Database }) {
   app.get('/api/health', async (_request, reply) => {

@@ -1,6 +1,6 @@
-export { PostgresCommentRepository, buildExcerpt } from './commentRepository.js';
-export type { CommentRepository } from './commentRepository.js';
-export { ThreadRepository } from './threadRepository.js';
-export { AdminRepository } from './adminRepository.js';
-export { ScrapeRepository } from './scrapeRepository.js';
-export { IngestRepository } from './ingestRepository.js';
+export { PostgresCommentRepository, buildExcerpt } from './comment.repository.js';
+export type { CommentRepository } from './comment.repository.js';
+export { ThreadRepository } from './thread.repository.js';
+export { AdminRepository } from './admin.repository.js';
+export { ScrapeRepository } from './scrape.repository.js';
+export { IngestRepository } from './ingest.repository.js';

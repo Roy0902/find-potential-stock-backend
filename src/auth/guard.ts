@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { HttpError, sendError } from '../http-error.js';
+import { HttpError, sendError } from '../http/http-error.js';
 import { readSessionCookie, type SessionRecord, type SessionStore } from './session.js';
 
 declare module 'fastify' {

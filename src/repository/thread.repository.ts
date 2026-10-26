@@ -1,4 +1,4 @@
-import type { Database } from '../db.js';
+import type { Database } from '../database/db.js';
 import { buildTree } from '../threads/tree.js';
 import type { CommentNode, ThreadCommentRow } from '../types/data/comment.data.js';
 import type { ThreadMeta } from '../types/data/thread.data.js';

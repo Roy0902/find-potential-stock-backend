@@ -1,21 +1,21 @@
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import type { AppConfig } from './config.js';
-import type { CommentRepository } from './repository/commentRepository.js';
-import type { Database } from './db.js';
-import { commentRoutes } from './comments/routes.js';
-import { forumRoutes } from './forums/routes.js';
-import { healthRoutes } from './health/routes.js';
-import { HttpError, sendError, toErrorEnvelope } from './http-error.js';
-import { ThreadRepository } from './repository/threadRepository.js';
-import { threadRoutes } from './threads/routes.js';
-import { AdminRepository } from './repository/adminRepository.js';
-import { adminRoutes } from './admin/routes.js';
+import type { CommentRepository } from './repository/comment.repository.js';
+import type { Database } from './database/db.js';
+import { commentRoutes } from './comments/comments.routes.js';
+import { forumRoutes } from './forums/forums.routes.js';
+import { healthRoutes } from './health/health.routes.js';
+import { HttpError, sendError, toErrorEnvelope } from './http/http-error.js';
+import { ThreadRepository } from './repository/thread.repository.js';
+import { threadRoutes } from './threads/threads.routes.js';
+import { AdminRepository } from './repository/admin.repository.js';
+import { adminRoutes } from './admin/admin.routes.js';
 import { SessionStore } from './auth/session.js';
 import { LoginRateLimiter } from './auth/rate-limit.js';
 import { makeGuard } from './auth/guard.js';
-import { authRoutes } from './auth/routes.js';
-import { legalRoutes } from './legal/routes.js';
+import { authRoutes } from './auth/auth.routes.js';
+import { legalRoutes } from './legal/legal.routes.js';
 
 export type BuildAppOptions = {
   config: AppConfig;
