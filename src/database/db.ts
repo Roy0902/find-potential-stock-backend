@@ -1,7 +1,6 @@
-import pg from 'pg';
+import { DataSource } from 'typeorm';
+import type { QueryRunner } from 'typeorm';
 import type { AppConfig } from '../config.js';
-
-const { Pool } = pg;
 
 export type QueryResult<Row> = {
   rows: Row[];
@@ -21,56 +20,91 @@ export type Database = Queryable & {
   isAvailable: () => Promise<boolean>;
 };
 
-export function createDatabase(config: AppConfig): Database {
-  const pool = new pg.Pool({
-    connectionString: config.databaseUrl,
-    max: 10,
-    idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 5_000,
-    statement_timeout: 30_000,
-  });
+async function runQuery<Row>(
+  runner: QueryRunner,
+  text: string,
+  values?: readonly unknown[],
+): Promise<QueryResult<Row>> {
+  const result = await runner.query(text, values as unknown[] | undefined, true);
+  const rows = (Array.isArray(result.records) ? result.records : result.raw) as Row[];
+  return {
+    rows,
+    rowCount: result.affected ?? rows.length,
+  };
+}
 
-  // An idle-client error must not crash the API (scraper and API share the DB).
-  pool.on('error', (error) => {
-    console.error('database idle client error', error);
+export function createDatabase(config: AppConfig): Database {
+  const dataSource = new DataSource({
+    type: 'postgres',
+    url: config.databaseUrl,
+    synchronize: false,
+    logging: false,
+    poolSize: 10,
+    extra: {
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 5_000,
+      statement_timeout: 30_000,
+    },
   });
+  let initialization: Promise<DataSource> | null = null;
+
+  const ensureReady = async (): Promise<void> => {
+    if (dataSource.isInitialized) return;
+    if (!initialization) {
+      initialization = dataSource.initialize().finally(() => {
+        initialization = null;
+      });
+    }
+    await initialization;
+  };
 
   const query = async <Row>(
     text: string,
     values?: readonly unknown[],
   ): Promise<QueryResult<Row>> => {
-    const result = await pool.query(text, values as unknown[]);
-    return { rows: result.rows as Row[], rowCount: result.rowCount };
+    await ensureReady();
+    const runner = dataSource.createQueryRunner();
+    try {
+      await runner.connect();
+      return await runQuery<Row>(runner, text, values);
+    } finally {
+      await runner.release();
+    }
   };
 
   const transaction = async <T>(fn: (tx: Queryable) => Promise<T>): Promise<T> => {
-    const client = await pool.connect();
+    await ensureReady();
+    const runner = dataSource.createQueryRunner();
     try {
-      await client.query('BEGIN');
+      await runner.connect();
+      await runner.startTransaction();
       const tx: Queryable = {
-        query: async <Row>(text: string, values?: readonly unknown[]) => {
-          const result = await client.query(text, values as unknown[]);
-          return { rows: result.rows as Row[], rowCount: result.rowCount };
-        },
+        query: <Row>(text: string, values?: readonly unknown[]) =>
+          runQuery<Row>(runner, text, values),
       };
       const result = await fn(tx);
-      await client.query('COMMIT');
+      await runner.commitTransaction();
       return result;
     } catch (error) {
-      await client.query('ROLLBACK').catch(() => undefined);
+      if (runner.isTransactionActive) {
+        await runner.rollbackTransaction().catch(() => undefined);
+      }
       throw error;
     } finally {
-      client.release();
+      await runner.release();
     }
   };
 
   return {
     query,
     transaction,
-    end: () => pool.end(),
+    end: async () => {
+      await initialization?.catch(() => undefined);
+      if (dataSource.isInitialized) await dataSource.destroy();
+    },
     isAvailable: async () => {
       try {
-        await pool.query('SELECT 1');
+        await query('SELECT 1');
         return true;
       } catch {
         return false;
