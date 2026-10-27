@@ -18,7 +18,7 @@ const ITEMS: LihkgThreadItem[] = [
     post_id: 'p1',
     msg_num: 2,
     page: 1,
-    msg: 'hello <b>world</b> &amp; more',
+    msg: 'hello <b>world</b><img src="/assets/faces/horse/smile3.gif" class="hkgmoji" /> &amp; more',
     reply_time: 1_790_000_000,
     status: 1,
     user: { user_id: 1, nickname: 'Alice' },

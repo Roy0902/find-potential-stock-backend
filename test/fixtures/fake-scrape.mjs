@@ -47,7 +47,7 @@ const thread = {
 };
 
 await writeFile(
-  join(keywordDir, 'thread-900001-comments.json'),
+  join(keywordDir, 'thread-900001-fixture-thread-comments.json'),
   JSON.stringify(thread, null, 2),
   'utf8',
 );

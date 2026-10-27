@@ -136,7 +136,7 @@ Each run:
 | `SCRAPE_RUN_ON_START` | `false` | Run once when the server starts |
 | `SCRAPE_STALE_MINUTES` | `240` | Age after which a `running` row is treated as crashed |
 | `SCRAPE_SOURCE` | `LIHKG` | `source.name` to scrape |
-| `SCRAPE_KEYWORDS` | `? | Comma-separated keywords; this iteration uses the first |
+| `SCRAPE_KEYWORDS` | `劇` | Comma-separated keywords; this iteration uses the first |
 | `SCRAPE_LIMIT` | `10` | Threads per run |
 | `SCRAPE_SORT` | `desc_reply_time` | LIHKG search order; most recently replied threads first |
 | `SCRAPE_DELAY_MS` | `4000` | Pause between page requests |

@@ -114,6 +114,16 @@ function safeDirName(name) {
   );
 }
 
+function safeFileStem(name) {
+  return (
+    name
+      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_')
+      .replace(/\s+/g, '_')
+      .replace(/[. ]+$/g, '')
+      .slice(0, 80) || 'untitled'
+  );
+}
+
 function decodeHtml(text = '') {
   return text
     .replace(/<br\s*\/?>/gi, '\n')
@@ -353,7 +363,7 @@ async function saveThreadResult(threadId, meta, rawItems, pagesCaptured, expecte
     },
   };
 
-  const file = path.join(outDir, `thread-${threadId}-comments.json`);
+  const file = path.join(outDir, `thread-${threadId}-${safeFileStem(meta.title)}-comments.json`);
   await fs.writeFile(file, JSON.stringify(result, null, 2), 'utf8');
   return { result, merged, file };
 }

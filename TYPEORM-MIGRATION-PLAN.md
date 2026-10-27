@@ -8,9 +8,9 @@ The external `find-potential-stock/local-env` schema is the source of truth. Do 
 
 ## Phase 1: Schema Baseline
 
-1. Obtain `../find-potential-stock/local-env/database/sql/schema.sql` and its seed/setup scripts.
-2. Verify tables, column types, nullability, defaults, primary/foreign keys, unique constraints, indexes, the partial unique running-scrape constraint, `pg_trgm`, and delete/update rules against PostgreSQL.
-3. Decide migration ownership. Recommended: TypeORM owns future backend migrations; `local-env` remains the setup and deterministic seed entry point.
+1. [x] Obtain `local-env/database/sql/schema.sql` and its seed/setup scripts.
+2. [x] Apply the schema to an empty local database and verify the live catalog: 11 tables, 73 columns, 38 constraints, and 27 indexes. Confirmed `pg_trgm` 1.6, foreign-key delete rules, and the partial unique `scrape_run_one_running_ix`.
+3. [x] Migration ownership: TypeORM owns future backend migrations; `local-env` remains the setup and deterministic seed entry point. Keep `synchronize: false`.
 
 ## Phase 2: TypeORM Bootstrap and Entities
 
@@ -53,6 +53,10 @@ The external `find-potential-stock/local-env` schema is the source of truth. Do 
 - Raw SQL or QueryBuilder remains allowed for high-volume PostgreSQL ingestion.
 - Entity cascades and lazy relations require explicit performance and deletion tests.
 
-## Current Blocker
+## Status (2026-10-27)
 
-The external `local-env` schema and seed project are on another computer. Entity mapping and migration generation must wait until those files or a populated database are available.
+Phase 1 is complete. `local-env` is now present, and its schema/seed scripts were exercised against PostgreSQL 17.11. The database was empty before setup; setup and deterministic seeding succeeded.
+
+Phases 2-5 remain. The backend currently uses a TypeORM `DataSource` as a raw-query adapter; it has no registered entities or migrations. Do not generate entities or migrations by inferring details from backend queries: use the verified `local-env/database/sql/schema.sql` baseline, then preserve the existing raw SQL and per-thread transaction behavior where required.
+
+Validation environment issue: backend `.env` connects as `fps_local_7c4a9e`, while `local-env/.env` connects as `postgres`. The schema objects created by `db:setup` are owned by `postgres`, so the backend role receives `permission denied` until the credentials are aligned or deliberate least-privilege grants are applied. This is separate from the TypeORM migration work and should be resolved before integration testing against this local database.

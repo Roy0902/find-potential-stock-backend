@@ -98,7 +98,7 @@ async function findThreadFiles(dir: string): Promise<string[]> {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       files.push(...(await findThreadFiles(full)));
-    } else if (/^thread-\d+-comments\.json$/.test(entry.name)) {
+    } else if (/^thread-\d+(?:-.+)?-comments\.json$/.test(entry.name)) {
       files.push(full);
     }
   }

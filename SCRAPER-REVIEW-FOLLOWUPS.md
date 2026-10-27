@@ -1,14 +1,13 @@
 # Scraper review follow-ups
 
-Status: **mid-review-fix, not verified green**. The original scraper implementation passed
-68/68 backend tests, the build, and the 49/49 follow-up Playwright suite. An independent review then
-found safety issues. Most Critical/High items were fixed, but the last two edits left two known test
-failures and the full verification has not been rerun.
+Status: **review complete; backend verification green; Playwright acceptance 48/49**. Both known
+scraper blockers are fixed and verified. The remaining Playwright failure is an environment-specific
+port collision in locked scenario `SCN-followup-020`, not a scraper failure.
 
-Do not enable `SCRAPE_ENABLED=true` until this file's two blockers are fixed and the verification
-section passes.
+Keep `SCRAPE_ENABLED=false` until the full acceptance suite passes in an environment where its
+hard-coded `localhost:3000` request reaches this backend.
 
-## Immediate blockers
+## Resolved Blockers
 
 ### 1. Deleted-only runs are misclassified as a layout failure
 
@@ -41,13 +40,14 @@ if (seen === 0 && ingestedThreads > 0) {
 
 `ingestedThreads` is already incremented at `src/scraper/runner.ts:556`.
 
-Expected result: the test `does not ingest a deleted thread` passes again.
+Resolved: the guard now requires `ingestedThreads > 0`. The test `does not ingest a deleted thread`
+passes.
 
 ### 2. Skip test still reads a log file that skipped runs no longer write
 
 **File:** `test/scraper/runner.test.ts:199`
 
-Current code:
+Current test:
 
 ```ts
 assert.match(await readFile(result.logFile!, 'utf8'), /skipping this run/);
@@ -60,25 +60,19 @@ the active run's log. Replace the line with:
 assert.equal(result.logFile, null);
 ```
 
-Expected result: the test `skips when another run is still marked running` passes again.
+Resolved: the test now asserts `result.logFile === null`. The test `skips when another run is still
+marked running` passes.
 
-## Verification after the two fixes
+## Verification Record (2026-10-27)
 
-```powershell
-cd C:\Users\pigcr\Documents\Workspace\find-potential-stock\local-env
-npm run db:setup          # applies scrape_run columns and the single-running index
-npm run db:reset
+- `local-env`: `db:setup` and non-reset `db:seed` succeeded against the previously empty local database.
+- Live catalog: 11 tables, 73 columns, 38 constraints, 27 indexes; `pg_trgm` 1.6 and the partial unique `scrape_run_one_running_ix` are present.
+- Backend: typecheck passed, build passed, and `npm test` passed 69/69; the focused runner suite passed 7/7.
+- Workflow guard: `npm run ai:verify` passed for all five frozen feature sets after fixing the moved `spec-to-test-workflow` relative paths.
+- Frontend: `npm run build` passed after making the API proxy target configurable.
+- Playwright: 48/49 passed on isolated ports using the fixture database role. `SCN-followup-020` failed because it hard-codes `http://localhost:3000/api/threads/9960`; that port is occupied by an unrelated Vite process and returns HTML. The locked test was not edited.
 
-cd ..\..\find-potential-stock-backend
-npm run typecheck
-npm test
-npm run build
-
-cd ..\find-potential-stock\local-env
-npm run db:reset
-npx playwright test tests/specs/followup.spec.ts --project=chromiumheadless
-npm run ai:verify
-```
+Before enabling scheduled scraping, rerun the 49-test suite with the backend on port 3000 (or otherwise make the locked `SCN-followup-020` request reach this backend), then rerun `npm run ai:verify`.
 
 Note: `SCN-followup-021` can fail when run alone because the locked test calls `evaluateAll`
 immediately after `domcontentloaded` without waiting for the card list. The full 49-test suite is the
@@ -132,10 +126,9 @@ acceptance run; do not edit the locked test.
 
 ## Working-tree notes
 
-- No commits were made. The backend repository has an initial commit; all scraper changes are
-  unstaged. The `find-potential-stock` repository schema change is also uncommitted.
-- The database was last reset with the seed, and `db:setup` has applied the new `scrape_run` columns,
-  `scrape_run_status_ix`, and `scrape_run_one_running_ix`.
+- The backend repository was clean before this review except for the supplied untracked `local-env/` folder. This review corrected the three `ai:*` script paths in its `package.json`; the folder remains untracked.
+- `db:setup` applied the schema and the database was seeded without truncating pre-existing data; the database was empty before setup.
+- The backend `.env` uses role `fps_local_7c4a9e`, while `local-env/.env` uses `postgres`. Tables created by `db:setup` are owned by `postgres`; use matching database credentials or explicitly configure least-privilege grants before running the API against this database.
 - `logs/scraper/` and `scrape-output/` are gitignored. Manual-run evidence from the earlier real
   scrape is still present there.
 - The real `.env` has `SCRAPE_ENABLED=false` and empty SMTP settings. Fill `SMTP_HOST`, `SMTP_PORT`,
