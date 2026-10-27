@@ -132,6 +132,21 @@ describe('ScrapeScheduler', () => {
     assert.ok(logs.some((line) => line.includes('not a valid IANA time zone')));
   });
 
+  test('runs every configured keyword sequentially', async () => {
+    const dir = await tempDir();
+    const { scheduler, runs, logs } = buildScheduler(dir, {
+      SCRAPE_KEYWORDS: 'first,second',
+    });
+
+    const results = await scheduler.runAll('incremental');
+
+    assert.equal(results.length, 2);
+    assert.equal(runs.finished.length, 2);
+    assert.ok(logs.some((line) => line.includes('scrape keyword "first"')));
+    assert.ok(logs.some((line) => line.includes('scrape keyword "second"')));
+    assert.ok(logs.some((line) => line.includes('scrape batch finished: 2/2 successful')));
+  });
+
   test('runs once on startup when configured', async () => {
     const dir = await tempDir();
     const { scheduler, runs, logs } = buildScheduler(dir, {

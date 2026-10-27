@@ -1,6 +1,6 @@
 import { after, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -121,6 +121,40 @@ async function runWithMode(mode: string, options: { dryRun?: boolean } = {}) {
 }
 
 describe('ScrapeRunner', () => {
+  test('ignores stale files left in a reused run output folder', async () => {
+    const dir = await tempDir();
+    const staleDir = join(dir, 'out', 'run-42', 'old-keyword');
+    await mkdir(staleDir, { recursive: true });
+    await writeFile(
+      join(staleDir, 'thread-999999-stale-comments.json'),
+      JSON.stringify({
+        response: { thread_id: 999999, item_data: [] },
+        _scrape: { incomplete: false, pages_expected: 1, pages_captured: [1] },
+      }),
+      'utf8',
+    );
+
+    const runs = new FakeRuns();
+    const ingest = new FakeIngest();
+    process.env.FAKE_SCRAPE_MODE = 'ok';
+    try {
+      const runner = new ScrapeRunner({
+        config: configFor(dir),
+        runs,
+        ingest,
+        scriptPath: FIXTURE,
+        cwd: process.cwd(),
+      });
+      const result = await runner.run({ limit: 1 });
+
+      assert.equal(result.commentsAdded, 1);
+      assert.equal(ingest.calls.length, 1);
+      assert.equal(ingest.calls[0]!.file.response.thread_id, 900001);
+    } finally {
+      delete process.env.FAKE_SCRAPE_MODE;
+    }
+  });
+
   test('runs the scraper, ingests its output and closes the run', async () => {
     const { runs, ingest, sent, result } = await runWithMode('ok');
 

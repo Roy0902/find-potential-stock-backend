@@ -41,7 +41,7 @@ export class ScrapeScheduler {
     this.task = schedule(
       this.config.scrape.cron,
       () =>
-        this.runNow('incremental').catch((error) => {
+        this.runAll('incremental').catch((error) => {
           this.log.error(`scrape run failed: ${error instanceof Error ? error.message : error}`);
         }),
       {
@@ -53,13 +53,41 @@ export class ScrapeScheduler {
     this.log.info(
       `scraper scheduled: "${this.config.scrape.cron}" (${this.config.scrape.timezone})`,
     );
+    this.log.info(
+      `scraper keywords: ${this.config.scrape.keywords.map((keyword) => `"${keyword}"`).join(', ')}`,
+    );
 
     if (this.config.scrape.runOnStart) {
       this.log.info('SCRAPE_RUN_ON_START=true; starting one run now');
-      void this.runNow('incremental').catch((error) => {
+      void this.runAll('incremental').catch((error) => {
         this.log.error(`scrape run failed: ${error instanceof Error ? error.message : error}`);
       });
     }
+  }
+
+  /** Runs one scrape per keyword, sequentially, so one scheduler tick covers every keyword. */
+  async runAll(
+    mode: ScrapeRunMode = 'incremental',
+    options: ScrapeRunOptions = {},
+  ): Promise<ScrapeRunResult[]> {
+    const keywords = options.keyword
+      ? [options.keyword]
+      : this.config.scrape.keywords;
+    const results: ScrapeRunResult[] = [];
+
+    for (const keyword of keywords) {
+      this.log.info(`scrape keyword "${keyword}"`);
+      results.push(await this.runNow(mode, { ...options, keyword }));
+    }
+
+    if (results.length > 1) {
+      const successful = results.filter(
+        (result) => !result.skipped && result.status === 'success',
+      ).length;
+      this.log.info(`scrape batch finished: ${successful}/${results.length} successful`);
+    }
+
+    return results;
   }
 
   async runNow(

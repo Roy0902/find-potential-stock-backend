@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdir, readdir, readFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AppConfig } from '../config.js';
@@ -251,6 +251,8 @@ export class ScrapeRunner {
         this.config.scrape.outputDir,
         `run-${runId ?? `dry-${startedAt.getTime()}`}`,
       );
+      // A reused run id (after a database reset) must not ingest files left by the old run.
+      await rm(outputDir, { recursive: true, force: true });
       await mkdir(outputDir, { recursive: true });
 
       const result = await this.spawnScraper({

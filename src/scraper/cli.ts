@@ -19,7 +19,7 @@ function usage(): string {
   return [
     'Usage: npm run scrape -- [options]',
     '',
-    '  --keyword <text>   Search keyword (default: SCRAPE_KEYWORDS)',
+    '  --keyword <text>   Run a single keyword (default: every SCRAPE_KEYWORDS entry)',
     '  --limit <n>        Threads to process (default: SCRAPE_LIMIT)',
     '  --mode <mode>      incremental | backfill (default: incremental)',
     '  --dry-run          Scrape and log without writing to the database',
@@ -84,17 +84,26 @@ async function main() {
       notifier: new ErrorNotifier(config.smtp),
     });
 
-    const result = await runner.run(options);
-    if (result.skipped) {
-      console.warn(`Scrape skipped: ${result.reason ?? 'unknown reason'}`);
-    } else {
-      console.log(
-        `Scrape ${result.status}: added=${result.commentsAdded}, ` +
-          `restricted=${result.commentsSkippedRestricted}, errors=${result.errors}, ` +
-          `stop=${result.stopReason}, log=${result.logFile ?? 'none'}`,
-      );
+    const keywords = options.keyword ? [options.keyword] : config.scrape.keywords;
+    let failed = false;
+
+    for (const keyword of keywords) {
+      console.log(`Scraping keyword "${keyword}"`);
+      const result = await runner.run({ ...options, keyword });
+      if (result.skipped) {
+        console.warn(`Scrape skipped: ${result.reason ?? 'unknown reason'}`);
+        failed = true;
+      } else {
+        console.log(
+          `Scrape ${result.status}: added=${result.commentsAdded}, ` +
+            `restricted=${result.commentsSkippedRestricted}, errors=${result.errors}, ` +
+            `stop=${result.stopReason}, log=${result.logFile ?? 'none'}`,
+        );
+        if (result.status === 'failed') failed = true;
+      }
     }
-    process.exitCode = result.status === 'failed' ? 1 : 0;
+
+    process.exitCode = failed ? 1 : 0;
   } finally {
     await db.end();
   }

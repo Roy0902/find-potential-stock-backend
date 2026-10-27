@@ -41,7 +41,7 @@ npm run dev                   # http://localhost:3000
 | `npm start` | Run the compiled build |
 | `npm test` | Unit tests + integration tests against the seeded database |
 | `npm run typecheck` | Type check without emitting |
-| `npm run scrape` | Run the LIHKG pipeline once (manual/backfill); same code path as the scheduler |
+| `npm run scrape` | Run the LIHKG pipeline once for every `SCRAPE_KEYWORDS` entry (manual/backfill) |
 | `npm run scrape:dist` | Same, using the compiled `dist/` build (production deps only) |
 
 ## Environment variables
@@ -76,7 +76,10 @@ npm run scrape -- --limit 1 --dry-run
 SCRAPE_ENABLED=true SCRAPE_RUN_ON_START=true npm run dev
 ```
 
-Each run:
+`npm run scrape` and the scheduler run every entry in `SCRAPE_KEYWORDS`, one after
+another. Pass `--keyword "<text>"` to the CLI to run a single keyword.
+
+Each keyword run:
 
 1. Looks up the source (`SCRAPE_SOURCE=LIHKG`).
 2. Closes any `running` row older than `SCRAPE_STALE_MINUTES` as `failed` (`stop_reason=stale`).
@@ -136,7 +139,7 @@ Each run:
 | `SCRAPE_RUN_ON_START` | `false` | Run once when the server starts |
 | `SCRAPE_STALE_MINUTES` | `240` | Age after which a `running` row is treated as crashed |
 | `SCRAPE_SOURCE` | `LIHKG` | `source.name` to scrape |
-| `SCRAPE_KEYWORDS` | `劇` | Comma-separated keywords; this iteration uses the first |
+| `SCRAPE_KEYWORDS` | `劇` | Comma-separated keywords; each runs as its own scrape run |
 | `SCRAPE_LIMIT` | `10` | Threads per run |
 | `SCRAPE_SORT` | `desc_reply_time` | LIHKG search order; most recently replied threads first |
 | `SCRAPE_DELAY_MS` | `4000` | Pause between page requests |
