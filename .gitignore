@@ -32,3 +32,5 @@ logs/
 .idea/
 .DS_Store
 Thumbs.db
+
+local-env/*
