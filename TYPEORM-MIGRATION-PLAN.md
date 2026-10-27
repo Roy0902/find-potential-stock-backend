@@ -4,7 +4,7 @@
 
 Replace the current TypeORM-backed raw-SQL adapter with real TypeORM entities and repositories. Preserve the existing Fastify routes, API response shapes, PostgreSQL-specific batch ingestion behavior, and per-thread transaction boundary.
 
-The external `find-potential-stock/local-env` schema is the source of truth. Do not infer a deployable schema from backend queries, and keep `synchronize: false`.
+The sibling `local-env` schema is the source of truth. Do not infer a deployable schema from backend queries, and keep `synchronize: false`.
 
 ## Phase 1: Schema Baseline
 
@@ -55,8 +55,8 @@ The external `find-potential-stock/local-env` schema is the source of truth. Do 
 
 ## Status (2026-10-27)
 
-Phase 1 is complete. `local-env` is now present, and its schema/seed scripts were exercised against PostgreSQL 17.11. The database was empty before setup; setup and deterministic seeding succeeded.
+Phase 1 is complete. `local-env` is present, and its schema/setup and deterministic seed scripts were exercised against PostgreSQL 17.11. The database was empty before setup.
 
-Phases 2-5 remain. The backend currently uses a TypeORM `DataSource` as a raw-query adapter; it has no registered entities or migrations. Do not generate entities or migrations by inferring details from backend queries: use the verified `local-env/database/sql/schema.sql` baseline, then preserve the existing raw SQL and per-thread transaction behavior where required.
+Phases 2-5 remain. The backend currently uses TypeORM `DataSource` as a raw-query adapter; it has no registered entities or migrations. Build entities/migrations from the verified schema baseline, not inferred queries.
 
-Validation environment issue: backend `.env` connects as `fps_local_7c4a9e`, while `local-env/.env` connects as `postgres`. The schema objects created by `db:setup` are owned by `postgres`, so the backend role receives `permission denied` until the credentials are aligned or deliberate least-privilege grants are applied. This is separate from the TypeORM migration work and should be resolved before integration testing against this local database.
+Validation environment issue: backend `.env` connects as `fps_local_7c4a9e`, while `local-env/.env` connects as `postgres`. The schema objects created by `db:setup` are owned by `postgres`, so integration requests using the backend role receive `permission denied` until credentials are aligned or deliberate least-privilege grants are applied.

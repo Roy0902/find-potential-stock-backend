@@ -1,11 +1,11 @@
 # Scraper review follow-ups
 
-Status: **review complete; backend verification green; Playwright acceptance 48/49**. Both known
-scraper blockers are fixed and verified. The remaining Playwright failure is an environment-specific
-port collision in locked scenario `SCN-followup-020`, not a scraper failure.
+Status: **review complete; targeted scraper verification green; full verification incomplete**.
+Both immediate scraper blockers are fixed. The latest backend typecheck and build pass, and the
+focused scrape integration tests pass 10/10. The full-suite and Playwright caveats are recorded below.
 
-Keep `SCRAPE_ENABLED=false` until the full acceptance suite passes in an environment where its
-hard-coded `localhost:3000` request reaches this backend.
+Keep `SCRAPE_ENABLED=false` until the backend database role is configured for the local schema and
+the full Playwright suite passes with its hard-coded `localhost:3000` request reaching this backend.
 
 ## Resolved Blockers
 
@@ -40,8 +40,7 @@ if (seen === 0 && ingestedThreads > 0) {
 
 `ingestedThreads` is already incremented at `src/scraper/runner.ts:556`.
 
-Resolved: the guard now requires `ingestedThreads > 0`. The test `does not ingest a deleted thread`
-passes.
+Resolved: the guard requires `ingestedThreads > 0`. The test `does not ingest a deleted thread` passes.
 
 ### 2. Skip test still reads a log file that skipped runs no longer write
 
@@ -60,19 +59,15 @@ the active run's log. Replace the line with:
 assert.equal(result.logFile, null);
 ```
 
-Resolved: the test now asserts `result.logFile === null`. The test `skips when another run is still
-marked running` passes.
+Resolved: the test asserts `result.logFile === null`. The skip test passes.
 
 ## Verification Record (2026-10-27)
 
-- `local-env`: `db:setup` and non-reset `db:seed` succeeded against the previously empty local database.
-- Live catalog: 11 tables, 73 columns, 38 constraints, 27 indexes; `pg_trgm` 1.6 and the partial unique `scrape_run_one_running_ix` are present.
-- Backend: typecheck passed, build passed, and `npm test` passed 69/69; the focused runner suite passed 7/7.
-- Workflow guard: `npm run ai:verify` passed for all five frozen feature sets after fixing the moved `spec-to-test-workflow` relative paths.
-- Frontend: `npm run build` passed after making the API proxy target configurable.
-- Playwright: 48/49 passed on isolated ports using the fixture database role. `SCN-followup-020` failed because it hard-codes `http://localhost:3000/api/threads/9960`; that port is occupied by an unrelated Vite process and returns HTML. The locked test was not edited.
-
-Before enabling scheduled scraping, rerun the 49-test suite with the backend on port 3000 (or otherwise make the locked `SCN-followup-020` request reach this backend), then rerun `npm run ai:verify`.
+- Backend typecheck and build pass after the raw-message storage change.
+- Focused scraper ingestion integration tests pass 10/10, and runner tests pass 7/7 with title-bearing filename support.
+- The latest full `npm test` run passed 65/69. Four API integration tests failed because their shared database fixtures were not in the expected clean state; do not treat that run as a green full-suite result.
+- The follow-up Playwright suite previously passed 48/49 on isolated ports. Locked scenario `SCN-followup-020` hard-codes `http://localhost:3000/api/threads/9960`, where an unrelated Vite process was listening and returned HTML. The locked test was not edited.
+- `npm run ai:verify` passed all five frozen feature sets in the earlier verification run.
 
 Note: `SCN-followup-021` can fail when run alone because the locked test calls `evaluateAll`
 immediately after `domcontentloaded` without waiting for the card list. The full 49-test suite is the
@@ -126,9 +121,8 @@ acceptance run; do not edit the locked test.
 
 ## Working-tree notes
 
-- The backend repository was clean before this review except for the supplied untracked `local-env/` folder. This review corrected the three `ai:*` script paths in its `package.json`; the folder remains untracked.
-- `db:setup` applied the schema and the database was seeded without truncating pre-existing data; the database was empty before setup.
-- The backend `.env` uses role `fps_local_7c4a9e`, while `local-env/.env` uses `postgres`. Tables created by `db:setup` are owned by `postgres`; use matching database credentials or explicitly configure least-privilege grants before running the API against this database.
+- The branch contains the scraper HTML-filter commit and its published revert. Current worktree intent is to preserve original `msg` strings; do not rewrite the shared history without coordinating a force push.
+- The backend `.env` uses role `fps_local_7c4a9e`, while `local-env/.env` uses `postgres`. Tables created by `db:setup` are owned by `postgres`; align credentials or apply deliberate least-privilege grants before running the API against this database.
 - `logs/scraper/` and `scrape-output/` are gitignored. Manual-run evidence from the earlier real
   scrape is still present there.
 - The real `.env` has `SCRAPE_ENABLED=false` and empty SMTP settings. Fill `SMTP_HOST`, `SMTP_PORT`,

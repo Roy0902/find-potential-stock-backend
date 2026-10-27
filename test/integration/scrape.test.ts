@@ -96,7 +96,7 @@ after(async () => {
 });
 
 describe('scrape ingestion', { skip: !dbUp ? 'database unavailable' : false }, () => {
-  test('inserts the thread, authors and comments with decoded bodies', async () => {
+  test('inserts the thread, authors and comments with original bodies', async () => {
     const result = await ingest.ingestThread(threadFile(), SOURCE, new Date());
 
     assert.equal(result.added, 2);
@@ -134,13 +134,16 @@ describe('scrape ingestion', { skip: !dbUp ? 'database unavailable' : false }, (
     const p1 = comments.rows[0]!;
     const p2 = comments.rows[1]!;
     assert.equal(p1.external_id, 'p1');
-    assert.equal(p1.body, 'hello world & more');
+    assert.equal(
+      p1.body,
+      'hello <b>world</b><img src="/assets/faces/horse/smile3.gif" class="hkgmoji" /> &amp; more',
+    );
     assert.equal(p1.lang, 'en');
     assert.equal(p1.parent_id, null);
     assert.equal(p1.url, 'https://lihkg.com/thread/900001/page/1#p1');
 
     assert.equal(p2.external_id, 'p2');
-    assert.equal(p2.body, '回覆\n第二行');
+    assert.equal(p2.body, '回覆 <br> 第二行');
     assert.equal(p2.lang, 'zh-HK');
     assert.equal(p2.parent_id, p1.id);
     assert.equal(p2.reply_target_unknown, false);

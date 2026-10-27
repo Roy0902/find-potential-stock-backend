@@ -4,7 +4,7 @@ import type {
   LihkgThreadFile,
   LihkgThreadItem,
 } from '../types/data/scrape.data.js';
-import { decodeHtml, detectLang } from '../scraper/html.js';
+import { detectLang } from '../scraper/html.js';
 
 type PreparedComment = {
   postId: string;
@@ -58,7 +58,7 @@ function prepareComment(
   if (!item.post_id || !item.user?.user_id) return null;
   if (item.status !== undefined && item.status !== 1) return null;
 
-  const body = decodeHtml(item.msg);
+  const body = item.msg ?? '';
   const postedAt = Number.isFinite(item.reply_time)
     ? new Date(item.reply_time * 1000)
     : seenAt;
