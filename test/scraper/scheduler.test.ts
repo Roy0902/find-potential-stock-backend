@@ -147,6 +147,22 @@ describe('ScrapeScheduler', () => {
     assert.ok(logs.some((line) => line.includes('scrape batch finished: 2/2 successful')));
   });
 
+  test('schedules a fixed interval from server start instead of cron', async () => {
+    const dir = await tempDir();
+    const { scheduler, runs, logs } = buildScheduler(dir, {
+      SCRAPE_ENABLED: 'true',
+      SCRAPE_INTERVAL_HOURS: '24',
+      SCRAPE_CRON: 'not a cron',
+    });
+
+    scheduler.start();
+    await scheduler.stop();
+
+    assert.ok(logs.some((line) => line.includes('every 24 hour(s) from server start')));
+    assert.ok(!logs.some((line) => line.includes('not a valid cron expression')));
+    assert.equal(runs.finished.length, 0);
+  });
+
   test('runs once on startup when configured', async () => {
     const dir = await tempDir();
     const { scheduler, runs, logs } = buildScheduler(dir, {

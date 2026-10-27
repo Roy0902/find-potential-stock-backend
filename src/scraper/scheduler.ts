@@ -11,6 +11,7 @@ export type SchedulerLog = {
 
 export class ScrapeScheduler {
   private task: ScheduledTask | null = null;
+  private timer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private readonly runner: ScrapeRunner,
@@ -23,36 +24,51 @@ export class ScrapeScheduler {
       this.log.info('scraper schedule is disabled (SCRAPE_ENABLED=false)');
       return;
     }
-    if (!validate(this.config.scrape.cron)) {
-      this.log.error(
-        `SCRAPE_CRON is not a valid cron expression: "${this.config.scrape.cron}"; scraper disabled`,
+
+    if (this.config.scrape.intervalHours > 0) {
+      const intervalMs = this.config.scrape.intervalHours * 60 * 60 * 1000;
+      this.timer = setInterval(() => {
+        void this.runAll('incremental').catch((error) => {
+          this.log.error(`scrape run failed: ${error instanceof Error ? error.message : error}`);
+        });
+      }, intervalMs);
+      this.timer.unref();
+      this.log.info(
+        `scraper scheduled: every ${this.config.scrape.intervalHours} hour(s) from server start`,
       );
-      return;
-    }
-    try {
-      new Intl.DateTimeFormat('en', { timeZone: this.config.scrape.timezone });
-    } catch {
-      this.log.error(
-        `SCRAPE_TIMEZONE is not a valid IANA time zone: "${this.config.scrape.timezone}"; scraper disabled`,
+    } else {
+      if (!validate(this.config.scrape.cron)) {
+        this.log.error(
+          `SCRAPE_CRON is not a valid cron expression: "${this.config.scrape.cron}"; scraper disabled`,
+        );
+        return;
+      }
+      try {
+        new Intl.DateTimeFormat('en', { timeZone: this.config.scrape.timezone });
+      } catch {
+        this.log.error(
+          `SCRAPE_TIMEZONE is not a valid IANA time zone: "${this.config.scrape.timezone}"; scraper disabled`,
+        );
+        return;
+      }
+
+      this.task = schedule(
+        this.config.scrape.cron,
+        () =>
+          this.runAll('incremental').catch((error) => {
+            this.log.error(`scrape run failed: ${error instanceof Error ? error.message : error}`);
+          }),
+        {
+          timezone: this.config.scrape.timezone,
+          name: 'find-potential-stock-scrape',
+          noOverlap: true,
+        },
       );
-      return;
+      this.log.info(
+        `scraper scheduled: "${this.config.scrape.cron}" (${this.config.scrape.timezone})`,
+      );
     }
 
-    this.task = schedule(
-      this.config.scrape.cron,
-      () =>
-        this.runAll('incremental').catch((error) => {
-          this.log.error(`scrape run failed: ${error instanceof Error ? error.message : error}`);
-        }),
-      {
-        timezone: this.config.scrape.timezone,
-        name: 'find-potential-stock-scrape',
-        noOverlap: true,
-      },
-    );
-    this.log.info(
-      `scraper scheduled: "${this.config.scrape.cron}" (${this.config.scrape.timezone})`,
-    );
     this.log.info(
       `scraper keywords: ${this.config.scrape.keywords.map((keyword) => `"${keyword}"`).join(', ')}`,
     );
@@ -121,6 +137,10 @@ export class ScrapeScheduler {
   }
 
   async stop(): Promise<void> {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
     if (this.task) {
       await this.task.destroy();
       this.task = null;

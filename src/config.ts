@@ -3,6 +3,8 @@ export type ScrapeConfig = {
   cron: string;
   timezone: string;
   runOnStart: boolean;
+  /** Run this often from server start. 0 keeps the cron schedule. */
+  intervalHours: number;
   staleMinutes: number;
   source: string;
   keywords: string[];
@@ -88,6 +90,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       cron: env.SCRAPE_CRON ?? '0 3 * * *',
       timezone: env.SCRAPE_TIMEZONE ?? 'Asia/Hong_Kong',
       runOnStart: boolFromEnv(env, 'SCRAPE_RUN_ON_START', false),
+      intervalHours: intFromEnv(env, 'SCRAPE_INTERVAL_HOURS', 0),
       staleMinutes: intFromEnv(env, 'SCRAPE_STALE_MINUTES', 240),
       source: env.SCRAPE_SOURCE ?? 'LIHKG',
       keywords: listFromEnv(env, 'SCRAPE_KEYWORDS', ['劇']),

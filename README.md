@@ -60,8 +60,23 @@ npm run dev                   # http://localhost:3000
 
 ## Scheduled scraper
 
-The API process can run the LIHKG pipeline on a cron schedule. It is **disabled by default**
+The API process can run the LIHKG pipeline on a schedule. It is **disabled by default**
 (`SCRAPE_ENABLED=false`) so local development, tests and Playwright never scrape by accident.
+
+There are two scheduling modes:
+
+- `SCRAPE_INTERVAL_HOURS > 0` — run every N hours from server start. This ignores
+  `SCRAPE_CRON`. Set it to `24` for a daily run anchored to startup.
+- `SCRAPE_INTERVAL_HOURS=0` — use the `SCRAPE_CRON` expression and `SCRAPE_TIMEZONE`.
+
+This workspace's `backend/.env` enables the scraper, runs it once at startup, and then
+every 24 hours:
+
+```dotenv
+SCRAPE_ENABLED=true
+SCRAPE_RUN_ON_START=true
+SCRAPE_INTERVAL_HOURS=24
+```
 
 ```bash
 npx playwright install chromium
@@ -72,8 +87,8 @@ npm run scrape -- --limit 1
 # scrape and log without writing to the database
 npm run scrape -- --limit 1 --dry-run
 
-# scheduler smoke test
-SCRAPE_ENABLED=true SCRAPE_RUN_ON_START=true npm run dev
+# scheduler smoke test (one run at startup, then every 24 hours)
+SCRAPE_ENABLED=true SCRAPE_RUN_ON_START=true SCRAPE_INTERVAL_HOURS=24 npm run dev
 ```
 
 `npm run scrape` and the scheduler run every entry in `SCRAPE_KEYWORDS`, one after
@@ -133,10 +148,11 @@ Each keyword run:
 
 | Variable | Default | Purpose |
 | :-- | :-- | :-- |
-| `SCRAPE_ENABLED` | `false` | Start the cron scheduler in this process |
-| `SCRAPE_CRON` | `0 3 * * *` | Cron expression |
+| `SCRAPE_ENABLED` | `false` | Start the scheduler in this process |
+| `SCRAPE_CRON` | `0 3 * * *` | Cron expression; used only when `SCRAPE_INTERVAL_HOURS=0` |
 | `SCRAPE_TIMEZONE` | `Asia/Hong_Kong` | Cron timezone |
 | `SCRAPE_RUN_ON_START` | `false` | Run once when the server starts |
+| `SCRAPE_INTERVAL_HOURS` | `0` | Run every N hours from server start; `0` uses cron |
 | `SCRAPE_STALE_MINUTES` | `240` | Age after which a `running` row is treated as crashed |
 | `SCRAPE_SOURCE` | `LIHKG` | `source.name` to scrape |
 | `SCRAPE_KEYWORDS` | `劇` | Comma-separated keywords; each runs as its own scrape run |
