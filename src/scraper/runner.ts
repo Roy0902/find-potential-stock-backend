@@ -3,6 +3,7 @@ import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AppConfig } from '../config.js';
+import { isUniqueViolation } from '../database/pg-error.js';
 import type { IngestRepository } from '../repository/ingest.repository.js';
 import type { ScrapeRepository } from '../repository/scrape.repository.js';
 import type {
@@ -63,15 +64,6 @@ function backendRoot(): string {
 
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: string }).code === '23505'
-  );
 }
 
 /** Kill the scraper and its Chromium children, not just the Node process. */

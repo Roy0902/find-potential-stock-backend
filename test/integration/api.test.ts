@@ -73,7 +73,7 @@ async function countAudit(targetType: string, targetId: number): Promise<number>
 }
 
 after(async () => {
-  await cleanupFixture();
+  if (dbUp) await cleanupFixture();
   await app.close();
   await db.end();
 });

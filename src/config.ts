@@ -16,6 +16,12 @@ export type ScrapeConfig = {
   outputDir: string;
   logDir: string;
   logMaxBytes: number;
+  /**
+   * Shared secret for the HTTP ingest API used by the local scraping script.
+   * When empty the endpoints answer 503, so a deployed server never accepts
+   * unauthenticated writes by accident.
+   */
+  ingestToken: string;
 };
 
 export type SmtpConfig = {
@@ -102,6 +108,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       outputDir: env.SCRAPE_OUTPUT_DIR ?? 'scrape-output',
       logDir: env.SCRAPE_LOG_DIR ?? 'logs/scraper',
       logMaxBytes: intFromEnv(env, 'SCRAPE_LOG_MAX_BYTES', 10 * 1024 * 1024),
+      ingestToken: env.SCRAPE_INGEST_TOKEN ?? '',
     },
     smtp: {
       host: env.SMTP_HOST ?? '',

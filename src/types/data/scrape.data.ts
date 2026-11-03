@@ -63,6 +63,11 @@ export type ScrapeRunRow = {
   log_file: string | null;
   error_count: number;
   stop_reason: string | null;
+  /** Set by the HTTP ingest flow; null for runs started by the spawned pipeline. */
+  keyword: string | null;
+  max_threads: number | null;
+  stop_on_complete: boolean;
+  threads_processed: number;
 };
 
 export type IngestThreadResult = {
@@ -71,4 +76,35 @@ export type IngestThreadResult = {
   seen: number;
   skippedRestricted: number;
   hidden: number;
+};
+
+export type ScrapeDecision = 'continue' | 'stop';
+
+/** Run state the local scraping script needs to decide what to do next. */
+export type ScrapeRunProgress = {
+  runId: number;
+  status: ScrapeRunStatus;
+  stopReason: string | null;
+  startedAt: string;
+  finishedAt: string | null;
+  keyword: string | null;
+  maxThreads: number | null;
+  stopOnComplete: boolean;
+  threadsProcessed: number;
+  commentsAdded: number;
+  commentsSkippedRestricted: number;
+  errorCount: number;
+};
+
+export type ScrapeThreadReport = Omit<IngestThreadResult, 'threadId'> & {
+  threadId: number | null;
+  externalThreadId: string;
+};
+
+export type ScrapeIngestOutcome = {
+  action: ScrapeDecision;
+  stopReason: string | null;
+  thread: ScrapeThreadReport;
+  error: string | null;
+  run: ScrapeRunProgress;
 };

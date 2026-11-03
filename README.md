@@ -121,6 +121,38 @@ Each keyword run:
   (`status=2`) threads are still re-scanned, because they can hold comments added before they
   closed. The script logs them as terminal.
 
+### HTTP ingest (local scraper)
+
+When the browser runs on your machine but the API is deployed, the script can post each raw
+thread payload instead of writing files the server cannot see. The server owns the `scrape_run`
+row, ingests exactly like the scheduled runner and replies with the next action.
+
+Set `SCRAPE_INGEST_TOKEN` on the server and send the same value in the `X-Scrape-Token`
+header. When the variable is empty the routes answer `503 SCRAPE_INGEST_DISABLED`, so a
+deployed server never accepts unauthenticated writes.
+
+1. `POST /api/scrape/runs` - body `{ mode?, keyword?, limit?, stopOnComplete? }`. Creates
+   the run and returns its progress (`runId`, `status`, counters, `maxThreads`,
+   `stopOnComplete`). Answers `409 SCRAPE_RUN_ACTIVE` while another run is still running.
+2. `POST /api/scrape/runs/:runId/threads` - body is the raw thread file itself (the same
+   `{ success, response, _scrape }` object the pipeline writes to
+   `thread-*-comments.json`; no wrapper). It ingests that thread and returns
+   `{ action: "continue" | "stop", stopReason, thread, error, run }`. `_scrape` still drives
+   the incomplete/hide rules.
+3. `POST /api/scrape/runs/:runId/finish` - body `{ stopReason?, errors? }`. Closes the run.
+   Send `exhausted` when the search queue ended and `rate-limited` when Cloudflare blocked a
+   request.
+4. `GET /api/scrape/runs/active` - the running run, or `null`. Use it to resume after a
+   script restart.
+5. `GET /api/scrape/runs/:runId` - inspect one run.
+
+Stopping is server-side: `completed` when `stopOnComplete` is set and the thread is archived
+with at least 1000 replies, and `limit` when the run reached its thread limit. A failed ingest
+is counted as an error and the script is told to continue. A stopped run is closed immediately,
+so the next start request succeeds, and a later post to that run answers
+`409 SCRAPE_RUN_NOT_RUNNING`. Schema: re-apply `local-env/database/sql/schema.sql` (idempotent)
+before starting a server built from this revision.
+
 ### Logs
 
 - Directory: `SCRAPE_LOG_DIR` (default `logs/scraper/`), gitignored.
@@ -164,6 +196,7 @@ Each keyword run:
 | `SCRAPE_OUTPUT_DIR` | `scrape-output` | Raw JSON evidence per run, gitignored |
 | `SCRAPE_LOG_DIR` | `logs/scraper` | Rotating text logs |
 | `SCRAPE_LOG_MAX_BYTES` | `10485760` | Rotation threshold |
+| `SCRAPE_INGEST_TOKEN` | empty | Shared secret for the HTTP ingest routes; empty disables them |
 | `SMTP_HOST` | empty | SMTP server; empty disables email |
 | `SMTP_PORT` | `587` | SMTP port |
 | `SMTP_SECURE` | `false` | Use implicit TLS (port 465) |

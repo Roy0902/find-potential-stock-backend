@@ -11,6 +11,24 @@ export type FinishRunInput = {
   stopReason: string;
 };
 
+export type CreateRunOptions = {
+  keyword?: string | null;
+  maxThreads?: number | null;
+  stopOnComplete?: boolean;
+};
+
+export type ThreadRunDelta = {
+  added: number;
+  skippedRestricted: number;
+  /** 1 when the thread payload failed to ingest, 0 otherwise. */
+  errors: number;
+};
+
+const RUN_COLUMNS = `id, source_id, mode, started_at, finished_at, status,
+        comments_added, comments_updated, comments_skipped_restricted,
+        log_file, error_count, stop_reason, keyword, max_threads,
+        stop_on_complete, threads_processed`;
+
 export class ScrapeRepository {
   constructor(private readonly db: Database) {}
 
@@ -26,12 +44,21 @@ export class ScrapeRepository {
     sourceId: number,
     mode: ScrapeRunMode,
     logFile: string | null,
+    options: CreateRunOptions = {},
   ): Promise<number> {
     const result = await this.db.query<{ id: number }>(
-      `INSERT INTO scrape_run (source_id, mode, started_at, status, log_file)
-       VALUES ($1, $2, now(), 'running', $3)
+      `INSERT INTO scrape_run
+         (source_id, mode, started_at, status, log_file, keyword, max_threads, stop_on_complete)
+       VALUES ($1, $2, now(), 'running', $3, $4, $5, $6)
        RETURNING id`,
-      [sourceId, mode, logFile],
+      [
+        sourceId,
+        mode,
+        logFile,
+        options.keyword ?? null,
+        options.maxThreads ?? null,
+        options.stopOnComplete ?? false,
+      ],
     );
     return result.rows[0]!.id;
   }
@@ -97,12 +124,29 @@ export class ScrapeRepository {
 
   async getRun(id: number): Promise<ScrapeRunRow | null> {
     const result = await this.db.query<ScrapeRunRow>(
-      `SELECT id, source_id, mode, started_at, finished_at, status,
-              comments_added, comments_updated, comments_skipped_restricted,
-              log_file, error_count, stop_reason
+      `SELECT ${RUN_COLUMNS}
          FROM scrape_run
         WHERE id = $1`,
       [id],
+    );
+    return result.rows[0] ?? null;
+  }
+
+  /**
+   * Adds one ingested thread to the run's counters. Returns the refreshed row, or
+   * null when the run is no longer `running` (another writer finished it first).
+   */
+  async recordThread(id: number, delta: ThreadRunDelta): Promise<ScrapeRunRow | null> {
+    const result = await this.db.query<ScrapeRunRow>(
+      `UPDATE scrape_run
+          SET threads_processed = threads_processed + 1,
+              comments_added = comments_added + $2,
+              comments_skipped_restricted = comments_skipped_restricted + $3,
+              error_count = error_count + $4
+        WHERE id = $1
+          AND status = 'running'
+        RETURNING ${RUN_COLUMNS}`,
+      [id, delta.added, delta.skippedRestricted, delta.errors],
     );
     return result.rows[0] ?? null;
   }

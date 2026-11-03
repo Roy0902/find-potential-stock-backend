@@ -16,12 +16,18 @@ import { LoginRateLimiter } from './auth/rate-limit.js';
 import { makeGuard } from './auth/guard.js';
 import { authRoutes } from './auth/auth.routes.js';
 import { legalRoutes } from './legal/legal.routes.js';
+import { IngestRepository } from './repository/ingest.repository.js';
+import { ScrapeRepository } from './repository/scrape.repository.js';
+import { ScrapeIngestService, type ScrapeIngestApi } from './scraper/ingest.service.js';
+import { scrapeIngestRoutes } from './scraper/ingest.routes.js';
 
 export type BuildAppOptions = {
   config: AppConfig;
   db: Database;
   repository: CommentRepository;
   logger?: boolean;
+  /** Lets route tests supply an in-memory ingest service instead of the database one. */
+  scrapeIngest?: ScrapeIngestApi;
 };
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
@@ -82,6 +88,14 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(threadRoutes, { repository: new ThreadRepository(db) });
   await app.register(authRoutes, { db, sessions, limiter, config });
   await app.register(legalRoutes);
+
+  const scrapeIngest =
+    options.scrapeIngest ??
+    new ScrapeIngestService(new ScrapeRepository(db), new IngestRepository(db), config);
+  await app.register(scrapeIngestRoutes, {
+    service: scrapeIngest,
+    token: config.scrape.ingestToken,
+  });
 
   await app.register(async (admin) => {
     // Same-origin check on mutations (AMB-shared-010). Browsers send Origin for
